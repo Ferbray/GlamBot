@@ -41,8 +41,8 @@ async def UpPhoto(ans, img_name):
 		))
 	upload_result = await upload_task
 	serv_xy_map = await bot.api.photos.save_messages_photo(photo=upload_result["photo"], 
-															server=upload_result["server"], 
-															hash=upload_result["hash"])
+														server=upload_result["server"], 
+														hash=upload_result["hash"])
 
 	xymap = "photo{}_{}".format(serv_xy_map[0].owner_id, serv_xy_map[0].id)
 	return xymap
@@ -56,6 +56,13 @@ async def registration(ans: Message):
 class Branch(ClsBranch):
 	@rule_disposal(VBMLRule(["Мужской","Женский"], lower=True))
 	async def join_registration_branch(self, ans: Message):
+		'''Планирование
+
+		🔸Убрать requests
+		🔸Написать парсинг через aiohttp
+		🔸Переписать заполнение бд под Tortoise
+
+		'''
 		os.mkdir(f"PhotoDatePlayers/{ans.from_id}")
 		try:
 			vk = await bot.api.users.get(user_ids=ans.from_id, fields="photo_400_orig")
@@ -85,7 +92,7 @@ class Branch(ClsBranch):
 		await conn.execute("INSERT INTO player_database VALUES ("
 		f"{ans.from_id}, '{reg_nick_id}', {gender_player}, {date_reg}, 0, 0, 0,"
 		"0, 0, 0, 76, 32, 19, 89, ..., 61, 6, , 0, 57, 100, 72, 100, 30, 100,"
-		"0, 100, 1, 500, 0, 0, 3, 0, 10, 6, 1, 0)")
+		"0, 100, 1, 500, 0, 0, 3, 0, 10, 6, 1, 1, 0)")
 
 		await conn.execute("INSERT INTO player_inventory VALUES ("
 		f"{ans.from_id}, '{reg_nick_id}',0,array[[1,5]],0,1,1,0,1)")
@@ -129,9 +136,10 @@ async def start_place(ans: Message):
 		   "🔹Задать вопросы команде разработчиков", 
 		   keyboard=house_keyboard, attachment=...)
 
-@bot.on.message(text=["топ игроков", "!топ игроков", "! топ игроков",
-					 "/топ игроков", "/ топ игроков"], lower=True)
+@bot.on.message(text=["топ игроков", "!топ игроков", "! топ игроков", 
+					  "/топ игроков", "/ топ игроков"], lower=True)
 async def top_player(ans: Message):
+	'''Заполнить кодом топ игроков по валюте - рублям'''
 	top_button = [
 		[{'text':'Домой', 'color':'negative'}]
 	]
@@ -178,6 +186,7 @@ async def find_server(ans: Message):
 
 @bot.on.message(text=["сессия — 1", "сессия — 2", "сессия — 3", "сессия — 4", "сессия — 5"], lower=True)
 async def connection_session(ans: Message):
+	'''Заполнить форму входа в мультиплеер'''
 	sessions_list = [
 	["Сессия — 1","first_session"],
 	["Сессия — 2","second_session"],
@@ -188,19 +197,26 @@ async def connection_session(ans: Message):
 	for sess in sessions_list:
 		session_player = await conn.fetch("SELECT %s,status_player FROM * WHERE id=%s" % (sess[1],ans.from_id))
 		if sess[0] == ans.text and (session_player<100 or 
-							  (session_player<99 and session_player[0]["status_player"] >= ...)):
+							  (session_player<120 and session_player[0]["status_player"] >= ...)):
 			await ans("🔸Вы зашли в мультиплеер")
+			await bot.branch.add(ans.peer_id, "multiplayer_branch")
 			break
 		elif sess[0]==ans.text:
 			house_button = [
 				[{'text':'Домой', 'color':'positive'}]
 			]
 			house_keyboard=keyboard_gen(house_button, inline=True)
-			await ans("🔸Сессия загружена приходите позже", keyboard=house_keyboard)
+			await ans("🔸Сессия загружена приходите позже", keyboard=house_keyboard, attachment=...)
 			break
 
 @bot.branch.cls_branch("market_branch")
 class Branch(ClsBranch):
+	'''Дописать код доната
+
+	🔸Проверка по оплате
+	🔸Отмена оплаты
+	🔸Сама оплата на aiohttp + aioqiwi
+	'''
 	@rule_disposal(VBMLRule("Выйти", lower=True))
 	async def exit_market_branch(self, ans: Message):
 		exit_market_button = [
@@ -264,6 +280,13 @@ async def join_market(ans: Message):
 
 @bot.on.message(text=["мои данные", "!мои данные", "! мои данные", "/мои данные", "/ мои данные"], lower=True)
 async def my_date(ans: Message):
+	'''Написать заполнения профиля
+
+	🔸Попробовать использовать разные модули
+	🔸OpenGL + Pillow + Pillow-SMID
+
+	'''
+	
 	my_date_button = [
 		[{'text':'Домой', 'color':'negative'}]
 	]
@@ -316,7 +339,7 @@ class Branch(ClsBranch):
 			await ans("❌Текст не прошел проверку\n"
 			 "🏷️Длина - от 10 до 50 символов!\n\n"
 			 "🔸Вы можете нажать на кнопку - отмены, если не хотите отправлять репорт", 
-			 keyboard=report_keyboard, attachment=...)
+			 keyboard=error_send_keyboard, attachment=...)
 
 	async def send_report_branch(self, ans: Message):
 		round_send_report_button = [
@@ -349,11 +372,108 @@ async def send_report(ans: Message):
 @bot.on.message(text=["админ рассылка", "!админ рассылка", "! админ рассылка", 
 					  "/админ рассылка", "/ админ рассылка"], lower=True)
 async def admin_mailing(ans: Message):
-	pass
+	if ans.from_id == 185031237:
+		admin_mail_button = [
+			[{'text':'Отменить', 'color':'negative'}]
+		]
+		admin_mail_keyboard = keyboard_gen(admin_mail_button, inline=True)
+		await ans("🔸Введите текст рассылки\n\n"
+			"Шаблон\n"
+			"адм Подписчики, у нас акция на статусы!\n\n"
+			"🔹Больше 5 символов и меньше 500 символов",
+			keyboard=ad_mail_keyboard, attachment=...)
+		await bot.branch.add(ans.from_id, 'admin_mailing_branch')
+	else:
+		refusal_adm_mail_but = [
+			[{'text':'Домой', 'color':'negative'}]
+		]
+		refusal_adm_mail_keyboard = keyboard_gen(refusal_adm_mail_but, inline=True)
+		await ans("❌Отказано в доступе", keyboard=refusal_adm_mail_keyboard, attachment=...)
+
+
+@bot.branch.cls_branch('admin_mailing_branch')
+class Branch(ClsBranch):
+	'''Необходимо добавить, чтобы Админ мог отправить при рассылке
+
+	🔸Клавиатуру
+	🔸Фотографию
+	🔸Пересланное письмо
+
+	'''
+	@rule_disposal(VBMLRule("Отменить", lower=True))
+	async def exit_ad_mailing_branch(self, ans: Message):
+		stop_adm_button = [
+			[{'text':'Домой', 'color':'negative'}]
+		]
+		stop_adm_keyboard = keyboard_gen(stop_adm_button, inline=True)
+		await ans("🔸Отмена отправки рассылки\n"
+			"🔸Выберите дальнейший путь", keyboard=stop_adm_keyboard, attachment=...)
+		await bot.branch.exit(ans.peer_id)
+
+	@rule_disposal(VBMLRule("адм <mailing_text>", lower=True))
+	async def exit_ad_mailing_branch(self, ans: Message, mailing_text):
+		if len(mailing_text)>=5 and len(mailing_text)<=500:
+			allowed_mailing_player = await conn.fetch("SELECT person_id FROM date_person WHERE indicator_mailing=1")
+			accept_mailinig_button = [
+				[{'text':'Домой', 'color':'negative'}]
+			]
+			accept_mailinig_keyboard = keyboard_gen(accept_mailinig_button, inline=True)
+			disconn_mailinig_button = [
+				[{'text':'Помощь', 'color':'negative'}]
+			]
+			disconn_mailinig_keyboard = keyboard_gen(disconn_mailinig_button, inline=True)
+			nick_admin_mailing = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
+			await ans('🎉Рассылка началась', attachment=...)
+			for person_id in allowed_mailing_player:
+				rand_num_mailing = random.randint(-2e9,2e9)
+				await bot.api.messages.send(user_id=person_id["person_id"],
+								random_id=rand_num_mailing,
+								message=(f"📢Вам пришла рассылка\n\n"
+				 "🔸Вы можете ее отменить в разделе помощь\n\n<<{ans.text}>>"),
+								keyboard=disconn_mailinig_keyboard,
+								attachment=...)
+
+			await ans("🎉Рассылка закончилась\n\n"
+			f"📢Отправлено — {len(all_person_id)}👤", 
+			keyboard=accept_mailinig_keyboard, attachment=...)
+			await bot.branch.exit(ans.peer_id)
+
+		else:
+			error_adm_mailing_button = [
+				[{'text':'Отменить', 'color':'negative'}]
+			]
+			error_adm_mailing_keyboard = keyboard_gen(error_adm_mailing_button, inline=True)
+			await ans("❌Текст не прошел проверку\n"
+			 "🏷️Длина - от 5 до 500 символов!\n\n"
+			 "🔸Вы можете нажать на кнопку - отмены, если не хотите отправлять репорт", 
+			 keyboard=error_adm_mailing_keyboard, attachment=...)
+
+	async def round_ad_mailing_branch(self, ans: Message):
+		round_ad_mailing_button = [
+			[{'text':'Выйти', 'color':'negative'}]
+		]
+		round_ad_mailing_keyboard = keyboard_gen(round_ad_mailing_button, inline=True)
+		await ans("❌Вы не указали в начале 'адм'\n\n"
+			"Шаблон\n"
+			"адм Подписчики, у нас акция на статусы!\n\n"
+			"Длина сообщения должна быть больше 5 символов и меньше 500",
+			keyboard=round_ad_mailing_keyboard, attachment=...)
 
 @bot.on.message(text=["рассылка", "!рассылка", "! рассылка", "/рассылка", "/ рассылка"], lower=True)
 async def panel_mailing(ans: Message):
-	pass
+	check_indicator_mailing = (await conn.fetch(f"SELECT indicator_mailing FROM player_database WHERE person_id={ans.from_id}"))[0]["indicator_mailing"]
+	panel_mailing_button = [
+		[{'text':'Домой', 'color':'negative'}]
+	]
+	panel_mailing_keyboard = keyboard_gen(panel_mailing_button,inline=True)
+	message_answer = ("📢Рассылка успешно отменена\n\n" 
+				 "🔸Если захотите быть снова в кругу событий и новостей, тогда нажмите еще раз на эту кнопку" 
+				 if check_indicator_mailing==1 else 
+				 "📢Свежие новости снова с вами, не скучали?\n" 
+				 "🔹Если захотите отключить оповещения, тогда нажмите еще раз на кнопку")
+	diff_indicator_mailing = (1 if check_indicator_mailing==0 else 0)
+	await conn.execute(f"UPDATE player_database SET check_indicator_mailing={diff_indicator_mailing} WHERE person_id={ans.from_id}")
+	await ans(message_answer, keyboard=panel_mailing_button, attachment=...)
 
 @bot.on.message(text=["помощь", "!помощь", "! помощь", "/помощь", "/ помощь"], lower=True)
 async def help(ans: Message):
@@ -370,7 +490,8 @@ async def help(ans: Message):
 	]
 	help_keyboard = keyboard_gen(help_button, inline=True)
 	await ans("🔸Вам нужна помощь?\n"
-		   "🔸Посмотрите статью\n🔸Если вы нашли баги,читеров и т.п - отправляйте репорт\n"
+		   "🔸Посмотрите статью\n"
+		   "🔸Если вы нашли баги,читеров и т.п - отправляйте репорт\n"
 		   "🔸Вы можете отключить/включить рассылку\n"
 		   "🔸Можете открыть офёрту и соглашение", 
 		   keyboard=help_keyboard, attachment=...)

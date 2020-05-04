@@ -37,6 +37,7 @@ async def connection():
 		"count_gold_bilets integer,"
 		"max_energy_player integer,"
 		"now_energy_player integer,"
+		"indicator_mailing integer,"#Defaul - 1/On
 		"view_reaction_bot integer,"#Type view reaction bot - image/text - 1/0
 		"status_player integer)")#Default - 0 / junior
 
