@@ -76,11 +76,11 @@ async def connection():
 		"whom_to_send integer)")#If message_type = 2 Then whom_to_send = recipient_id
 
 	await conn.execute("CREATE TABLE IF NOT EXISTS settings ("
-		"id int,"
+		"player_id int,"
 		"nickname VARCHAR,"
-		"accept_type_chat_mess VARCHAR,"
-		"type_show_chat int,"
-		"shrifts_all VARCHAR)")
+		"accept_type_chat_mess integer,"#Def - 0/Mixed
+		"type_show_chat integer,"
+		"shrifts_all integer)")
 
 	print("Executed")
 
