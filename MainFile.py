@@ -23,19 +23,27 @@ from qiwi_wrapper import *
 
 bot = Bot('9c6713c47ccc55cbbb5ba7b712c1a8a5e7c3c419da361d12f60dfd27ad3c882ed28c344b898193733989b', mobile=False)
 
-conn = Database(user='glamuser', password='GisMyVoron1974', database='glamdata', host='127.0.0.1')
+conn = Database(user='glamuser', 
+				password='GisMyVoron1974', 
+				database='glamdata', 
+				host='127.0.0.1')
 
 async def get_info(upload_url: str, files: dict):
 	async with ClientSession(json_serialize=json.dumps) as client:
-		async with client.post(upload_url, ssl=ssl.SSLContext(),data=files) as r:
+		async with client.post(upload_url, ssl=ssl.SSLContext(), data=files) as r:
 			response = await r.read()
 	return json.loads(response)
 
 async def UpPhoto(ans, img_name):
 	upload_info = await bot.api.photos.get_messages_upload_server(peer_id=ans.from_id)
-	upload_task = bot.loop.create_task(get_info(upload_info.upload_url, files={'photo': open(img_name, "rb")}))
+	upload_task = bot.loop.create_task(get_info(
+		upload_info.upload_url, files={'photo': open(img_name, "rb")}
+		))
 	upload_result = await upload_task
-	serv_xy_map = await bot.api.photos.save_messages_photo(photo=upload_result["photo"], server=upload_result["server"], hash=upload_result["hash"])
+	serv_xy_map = await bot.api.photos.save_messages_photo(photo=upload_result["photo"], 
+															server=upload_result["server"], 
+															hash=upload_result["hash"])
+
 	xymap = "photo{}_{}".format(serv_xy_map[0].owner_id, serv_xy_map[0].id)
 	return xymap
 
@@ -46,7 +54,7 @@ async def registration(ans: Message):
 
 @bot.branch.cls_branch("registration_branch")
 class Branch(ClsBranch):
-	@rule_disposal(VBMLRule(text=["Мужской","Женский"], lower=True))
+	@rule_disposal(VBMLRule(["Мужской","Женский"], lower=True))
 	async def join_registration_branch(self, ans: Message):
 		os.mkdir(f"PhotoDatePlayers/{ans.from_id}")
 		try:
@@ -90,7 +98,10 @@ class Branch(ClsBranch):
 		]
 		after_registration_keyboard = keyboard_gen(after_registration_button, inline=True)
 
-		await ans(f"🔸Поздравляю, вы успешно прошли регистрацию\n🔸Ваш персонаж - {ans.text[:-2]}ого рода\n🔸Вам открыта новая локация - Домой, нажмите на неё", keyboard=after_registration_keyboard, attachment=...)
+		await ans("🔸Поздравляю, вы успешно прошли регистрацию\n"
+			"🔸Ваш персонаж - {ans.text[:-2]}ого рода\n"
+			"🔸Вам открыта новая локация - Домой, нажмите на неё", 
+			keyboard=after_registration_keyboard, attachment=...)
 
 	async def round_registration_branch(self, ans: Message, *args):
 		registration_button = [
@@ -98,10 +109,11 @@ class Branch(ClsBranch):
 			[{'text':'Женский', 'color':'primary'}]
 		]
 		registration_keyboard = keyboard_gen(registration_button, inline=True)
-		await ans("🔸Добро пожаловать в блок регистрации\n🔸Выберите род вашего персонажа!", keyboard=registration_keyboard, attachment=...)
+		await ans("🔸Добро пожаловать в блок регистрации\n🔸Выберите род вашего персонажа!", 
+			keyboard=registration_keyboard, attachment=...)
 
 
-@bot.on.message(text=["домой", "!домой", "! домой", "/домой", "/ домой"],lower=True)
+@bot.on.message(text=["домой", "!домой", "! домой", "/домой", "/ домой"], lower=True)
 async def start_place(ans: Message):
 	house_button = [
 		[{'text':'Найти сервер','color':'positive'}],
@@ -109,17 +121,26 @@ async def start_place(ans: Message):
 		[{'text':'Мои данные', 'color':'positive'}, {'text':'Помощь', 'color':'positive'}]
 	]
 	house_keyboard = keyboard_gen(house_button, inline=True)
-	await ans("🔸Добро пожаловать на старт площадку — это место для отдыха от мултьтиплеера\n🔸Здесь вы можете: приобрести игровую валюту, узнать топ игроков, посмотреть свои данные,задать вопросы команде разработчиков.", keyboard=house_keyboard, attachment=...)
+	await ans("🔸Добро пожаловать на старт площадку — это место для отдыха от мултьтиплеера\n\n"
+		   "Здесь вы можете:\n"
+		   "🔹Приобрести игровую валюту\n"
+		   "🔹Узнать топ игроков\n"
+		   "🔹Посмотреть свои данные\n"
+		   "🔹Задать вопросы команде разработчиков", 
+		   keyboard=house_keyboard, attachment=...)
 
-@bot.on.message(text=["топ игроков", "!топ игроков", "! топ игроков", "/топ игроков", "/ топ игроков"],lower=True)
+@bot.on.message(text=["топ игроков", "!топ игроков", "! топ игроков",
+					 "/топ игроков", "/ топ игроков"], lower=True)
 async def top_player(ans: Message):
 	top_button = [
 		[{'text':'Домой', 'color':'negative'}]
 	]
-	top_keyboard = keyboard_gen(top_button,inline=True)
-	await ans("🔸Вам показан топ игроков GlamBot-а\n🔸Здесь собраны самые величайшие бойцы", keyboard=top_keyboard, attachment=...)
+	top_keyboard = keyboard_gen(top_button, inline=True)
+	await ans("🔸Вам показан топ игроков GlamBot-а\n🔸Здесь собраны самые величайшие бойцы", 
+		   keyboard=top_keyboard, attachment=...)
 
-@bot.on.message(text=["найти сервер", "!найти сервер", "! найти сервер", "/топ игроков", "/ топ игроков"],lower=True)
+@bot.on.message(text=["найти сервер", "!найти сервер", "! найти сервер", 
+					  "/найти сервер", "/ найти сервер"], lower=True)
 async def find_server(ans: Message):
 	sessions_button = []
 
@@ -138,7 +159,8 @@ async def find_server(ans: Message):
 		light_bulb_load = ("💚" if session_player<=70 else "🧡")
 		light_bulb_load = ("❤️" if session_player>=100 else light_bulb_load)
 		load_sessions += f"{sess[0]}\n👥Игроков — [0/{session_player}]{light_bulb_load}\n"
-		if session_player[0][f"{sess[1]}"] < 100 or (session_player[0]["status_player"] >= ... and session_player[0][f"{sess[1]}"] < 110):
+		if session_player[0][f"{sess[1]}"] < 100 or (session_player[0]["status_player"] >= ... 
+											   and session_player[0][f"{sess[1]}"] < 110):
 			sessions_button.append([
 				[{'text':sess[0], 'color':'negative'}]
 			])
@@ -148,7 +170,11 @@ async def find_server(ans: Message):
 		[{'text':'Домой', 'color':'negative'}]
 	])
 	session_keyboard = keyboard_gen(sessions_button, inline=True)
-	await ans(f"🔸Это меню выбора сессии, благодаря им вы с другом можете играть вместе, так же сессии нужны, чтобы снизить нагрузку в локациях\n🔸Покупая статус — ..., вы сможете заходить на сессию с загрузкой до 120 человек\n\n🔹Сессии:\n{load_sessions}", keyboard=session_keyboard, attachment=...)
+	await ans("🔸Это меню выбора сессии - благодаря им вы с другом можете играть вместе\n"
+		   "Так же сессии нужны, чтобы снизить нагрузку в локациях\n"
+		   "🔸Покупая статус — ..., вы сможете заходить на сессию с загрузкой до 120 человек\n\n"
+		   f"🔹Сессии:\n{load_sessions}", 
+		   keyboard=session_keyboard, attachment=...)
 
 @bot.on.message(text=["сессия — 1", "сессия — 2", "сессия — 3", "сессия — 4", "сессия — 5"], lower=True)
 async def connection_session(ans: Message):
@@ -161,26 +187,28 @@ async def connection_session(ans: Message):
 	]
 	for sess in sessions_list:
 		session_player = await conn.fetch("SELECT %s,status_player FROM * WHERE id=%s" % (sess[1],ans.from_id))
-		if sess[0] == ans.text and (session_player<100 or (session_player<99 and session_player[0]["status_player"] >= ...)):
+		if sess[0] == ans.text and (session_player<100 or 
+							  (session_player<99 and session_player[0]["status_player"] >= ...)):
 			await ans("🔸Вы зашли в мультиплеер")
 			break
 		elif sess[0]==ans.text:
 			house_button = [
 				[{'text':'Домой', 'color':'positive'}]
 			]
-			house_keyboard=keyboard_gen(house_button,inline=True)
+			house_keyboard=keyboard_gen(house_button, inline=True)
 			await ans("🔸Сессия загружена приходите позже", keyboard=house_keyboard)
 			break
 
 @bot.branch.cls_branch("market_branch")
 class Branch(ClsBranch):
-	@rule_disposal(VBMLRule("выйти", lower=True))
+	@rule_disposal(VBMLRule("Выйти", lower=True))
 	async def exit_market_branch(self, ans: Message):
 		exit_market_button = [
 			[{'text':'Домой', 'color':'positive'}]
 		]
 		exit_market_keyboard = keyboard_gen(exit_market_button, inline=True)
-		await ans("Окей, выходим!\nНажмите на кнопку <<Домой>>, чтобы вернуться", keyboard=exit_market_keyboard, attachment=...)
+		await ans("Окей, выходим!\nНажмите на кнопку <<Домой>>, чтобы вернуться", 
+			keyboard=exit_market_keyboard, attachment=...)
 		await bot.branch.exit(ans.peer_id)
 
 	@rule_disposal(VBMLRule("<ammount_gold:int>", lower=True))
@@ -210,7 +238,10 @@ class Branch(ClsBranch):
 			[{'text':'Выйти', 'color':'positive'}]
 		]
 		round_buy_valuts_keyboard = keyboard_gen(round_buy_valuts_button, inline=True)
-		await ans("🔸Продавец - 'Я не понял, какое количество золота вы хотите приобрести?'\n🔸Напишите количество золота не больше 900к! Так же вы можете выбрать сумму, которую часто используют, нажатием на кнопку", keyboard=round_buy_valuts_keyboard, attachment=...)
+		await ans("🔸Продавец - 'Я не понял, какое количество золота вы хотите приобрести?'\n"
+			"🔸Напишите количество золота не больше 900к!\n"
+			"Так же вы можете выбрать сумму, которую часто используют, нажатием на кнопку", 
+			keyboard=round_buy_valuts_keyboard, attachment=...)
 
 @bot.on.message(text=["магазин", "!магазин", "! магазин", "/магазин", "/ магазин"], lower=True)
 async def join_market(ans: Message):
@@ -220,18 +251,111 @@ async def join_market(ans: Message):
 		[{'text':'Выйти', 'color':'negative'}]
 	]
 	join_market_keyboard = keyboard_gen(join_market_button, inline=True)
-	await ans("🔸Вы пришли в магазин бота, здесь вы можете приобрести золотые монеты\n🔸Выберите подходящий вариант или введите свою сумму\n\n🔹Отношение валют 1:10 (рубль:голде)\n\n100₽ — 1000🔶\n250₽ — 2500🔶\n500₽ — 5000🔶\n1000₽ — 10000🔶\n\n🔸Макс покупка голды — 900000🔶", keyboard=join_market_keyboard, attachment=...)
+	await ans("🔸Вы пришли в магазин бота, здесь вы можете приобрести золотые монеты\n"
+		   "🔸Выберите подходящий вариант или введите свою сумму\n\n"
+		   "🔹Отношение валют 1:10 (рубль:голде)\n\n"
+		   "100₽ — 1000🔶\n"
+		   "250₽ — 2500🔶\n"
+		   "500₽ — 5000🔶\n"
+		   "1000₽ — 10000🔶\n\n"
+		   "🔸Макс покупка голды — 900000🔶", 
+		   keyboard=join_market_keyboard, attachment=...)
 	await bot.branch.add(ans.peer_id, "market_branch")
 
-@bot.on.message(text=["мои данные", "!мои данные", "! мои данные", "/мои данные", "/ мои данные"],lower=True)
+@bot.on.message(text=["мои данные", "!мои данные", "! мои данные", "/мои данные", "/ мои данные"], lower=True)
 async def my_date(ans: Message):
 	my_date_button = [
 		[{'text':'Домой', 'color':'negative'}]
 	]
-	my_date_keyboard = keyboard_gen(my_date_button,inline=True)
+	my_date_keyboard = keyboard_gen(my_date_button, inline=True)
 	await ans("🔸Ваши данные представлены на картинке", keyboard=my_date_keyboard, attachment=...)
 
-@bot.on.message(text=["помощь", "!помощь", "! помощь", "/помощь", "/ помощь"],lower=True)
+@bot.branch.cls_branch("report_branch")
+class Branch(ClsBranch):
+	@rule_disposal(VBMLRule("Выйти", lower=True))
+	async def exit_report_branch(self, ans: Message):
+		exit_report_button = [
+			[{'text':'Домой', 'color':'positive'}]
+		]
+		exit_report_keyboard = keyboard_gen(exit_report_button, inline=True)
+		await ans("Окей, выходим!\nНажмите на кнопку <<Домой>>, чтобы вернуться", 
+			keyboard=exit_report_keyboard, attachment=...)
+		await bot.branch.exit(ans.peer_id)
+
+	@rule_disposal(VBMLRule("реп <report_text>", lower=True))
+	async def exit_report_branch(self, ans: Message, report_text):
+		if len(report_text)>=10 and len(report_text)<=50:
+			accept_report_button = [
+				[{'text':'Домой', 'color':'negative'}]
+			]
+			accept_report_keyboard = keyboard_gen(accept_report_button, inline=True)
+			root_button = [
+				[{'text':'Ответить', 'color':'positive'}]
+			]
+			
+			root_keyboard = keyboard_gen(root_button, inline=True)
+			nick_player_report = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
+			rand_report = random.randint(-2e9,2e9)
+			await bot.api.messages.send(user_id=185031237, 
+							   random_id=rand_report, 
+							   message=(f"Вам пришел репорт от игрока @id{ans.from_id}({nick_player_report})\n\n\n"
+										"Его ид:{ans.from_id}\n\n"
+										"Он хочет спросить:\n"
+										"<<{ans.text}>>"),
+							   keyboard=root_keyboard,
+							   attachment=...)
+			await ans(f'🎉Ваш текст отправлен, ждите ответа:\n\n\n <<{ans.text}>> !', 
+						keyboard=stop_report_keyboard, attachment=...)
+			await bot.branch.exit(ans.from_id)
+
+		else:
+			error_send_button = [
+				[{'text':'Выйти', 'color':'negative'}]
+			]
+			error_send_keyboard = keyboard_gen(error_send_button, inline=True)
+			await ans("❌Текст не прошел проверку\n"
+			 "🏷️Длина - от 10 до 50 символов!\n\n"
+			 "🔸Вы можете нажать на кнопку - отмены, если не хотите отправлять репорт", 
+			 keyboard=report_keyboard, attachment=...)
+
+	async def send_report_branch(self, ans: Message):
+		round_send_report_button = [
+		[{'text':'Выйти', 'color':'negative'}]
+	]
+		round_send_report_keyboard = keyboard_gen(round_send_report_button, inline=True)
+		await ans("❌Вы не указали в начале 'реп'\n\n"
+			"Шаблон\n"
+			"реп Админы, у вас не работает чат в мультиплеере, зайдите посмотрите\n\n"
+			"Длина сообщения должна быть больше 10 символов и меньше 50",
+			keyboard=round_send_report_keyboard, attachment=...)
+
+@bot.on.message(text=["отправить репорт", "!отправить репорт", "! отправить репорт", 
+					  "/отправить репорт", "/ отправить репорт"], lower=True)
+async def send_report(ans: Message):
+	send_report_button = [
+		[{'text':'Выйти', 'color':'negative'}]
+	]
+	send_report_keyboard = keyboard_gen(send_report_button, inline=True)
+	await ans("🔸Вы зашли в блок отправки репорта,\n"
+			"🔸Его необходимость в том, чтобы связаться с администрацией\n\n"
+			"Шаблон отправки сообщения\n"
+			"реп В чате мультиплеера проблема с отправкой сообщений\n\n"
+			"🔸Текст репорта должен быть больше 10 символов и меньше 50!\n"
+			"🔸Не забывайте командное слово 'реп' в начале\n"
+			"!!!Предупреждение, если сообщения будут не адекватными или содержать спам/флуд, то администрация в праве заблокировать вам репорт!!!", 
+		   keyboard=send_report_keyboard, attachment=...)
+	await bot.branch.add(ans.peer_id, "report_branch")
+
+@bot.on.message(text=["админ рассылка", "!админ рассылка", "! админ рассылка", 
+					  "/админ рассылка", "/ админ рассылка"], lower=True)
+async def admin_mailing(ans: Message):
+	pass
+
+@bot.on.message(text=["рассылка", "!рассылка", "! рассылка", "/рассылка", "/ рассылка"], lower=True)
+async def panel_mailing(ans: Message):
+	pass
+
+@bot.on.message(text=["помощь", "!помощь", "! помощь", "/помощь", "/ помощь"], lower=True)
 async def help(ans: Message):
 	help_button = [
 		[{'text':'Отправить репорт', 'color':'positive'}],
@@ -245,4 +369,8 @@ async def help(ans: Message):
 		[{'text':'Домой', 'color':'negative'}]
 	]
 	help_keyboard = keyboard_gen(help_button, inline=True)
-	await ans("🔸Вам нужна помощь?\n🔸Посмотрите статью\n🔸Если вы нашли баги,читеров и т.п - отправляйте репорт\n🔸Вы можете отключить/включить рассылку\n🔸Можете открыть офёрту и соглашение", keyboard=help_keyboard)
+	await ans("🔸Вам нужна помощь?\n"
+		   "🔸Посмотрите статью\n🔸Если вы нашли баги,читеров и т.п - отправляйте репорт\n"
+		   "🔸Вы можете отключить/включить рассылку\n"
+		   "🔸Можете открыть офёрту и соглашение", 
+		   keyboard=help_keyboard, attachment=...)
