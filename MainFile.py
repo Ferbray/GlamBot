@@ -96,33 +96,29 @@ class Branch(ClsBranch):
 			date_reg=now_time_reg,
 			protect_arm=...
 		)
+		
+		first_build = [[0, 0],[1001, 1]]
 
 		await PlayerRocket.create(
 			pers_id=ans.from_id, 
 			name_rocket='Тритон 8',
-			Will_be_supplemented=...,
-			Will_be_supplemented2=...,
-			Will_be_supplemented3=...,
-			Will_be_supplemented4=...,
-			Will_be_supplemented5=...,
-			Will_be_supplemented6=...
+			place_builds = json.dumps([
+				[0, 0],
+				[1001, 1]
+			])
 		)
 
 		await PlayerInventory.create(
 			pers_id=ans.from_id, 
 			pers_nickname=reg_nick_id, 
-			backpack_cells=...
+			backpack_cells=json.dumps([
+				[0, 7]
+			])
 		)
 
 		await PlayerSettings.create(
 			pers_id=ans.from_id, 
-			pers_nickname=reg_nick_id, 
-			Will_be_supplemented=...,
-			Will_be_supplemented2=...,
-			Will_be_supplemented3=...,
-			Will_be_supplemented4=...,
-			Will_be_supplemented5=...,
-			Will_be_supplemented6=...
+			pers_nickname=reg_nick_id
 		)
 
 		after_registration_button = [
@@ -323,7 +319,7 @@ async def my_date(ans: Message):
 	'''Написать заполнения профиля
 
 	🔸Попробовать использовать разные модули
-	🔸OpenGL + Pillow + Pillow-SMID
+	🔸OpenGL + Pillow + Pillow-SMID/numpy
 
 	'''
 	

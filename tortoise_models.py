@@ -45,6 +45,7 @@ class StatePlayer(Model):
     indicator_mailing = fields.IntField(Default=1)
     view_react_bot = fields.IntField(Default=1) #Type view reaction bot - image/text - 1/0
     status_player = fields.IntField(Default=0)
+    status_learning = fields.IntField(Default=0)
 
     class Meta:
         database = "player_database"
@@ -52,9 +53,12 @@ class StatePlayer(Model):
 class PlayerRocket(Model):
     id = fields.IntField(pk=True)
     pers_id = fields.IntField()
+    type_rocket = fields.IntField(Default=0)
     name_rocket = fields.CharField(max_length=30)
-    ...
-    ...
+    now_fuel = fields.BigIntField(Default=3000)
+    now_build = fields.IntField(Default=2)
+    max_build = fields.IntField(Default=2)
+    place_builds = fields.JSONField() #1 - num place object; 2 - type object
 
     class Meta:
         database = "player_rocket"
@@ -107,11 +111,9 @@ class PlayerSettings(Model):
     pers_id = fields.IntField()
     pers_nick = fields.CharField(max_length=30)
     view_type_mess = fields.IntField(Default=0)
+    view_quests = fields.IntField(Default=1)
     type_show_chat = fields.IntField(Default=0)
     shrifts_all = fields.IntField(Default=0)
-    ...
-    ...
-    ...
 
     class Meta:
         database = "player_settings"
