@@ -1,3 +1,9 @@
+'''Need:
+	
+🔸Finish writing locations for using the tortoise module
+
+'''
+
 import json
 import os
 import shutil
@@ -13,20 +19,14 @@ from vkbottle.branch import ClsBranch, ExitBranch, rule_disposal, Branch
 from vkbottle.rule import AbstractMessageRule
 from vkbottle.keyboard import Keyboard, Text
 from vbml import PatchedValidators
+from tortoise import Tortoise
 from aiohttp import ClientSession
 import requests
 import asyncio
-import asyncpg
 
-from database_wrapper import Database
 from qiwi_wrapper import *
-
+from tortoise_models import *
 bot = Bot('9c6713c47ccc55cbbb5ba7b712c1a8a5e7c3c419da361d12f60dfd27ad3c882ed28c344b898193733989b', mobile=False)
-
-conn = Database(user='glamuser', 
-				password='GisMyVoron1974', 
-				database='glamdata', 
-				host='127.0.0.1')
 
 async def get_info(upload_url: str, files: dict):
 	async with ClientSession(json_serialize=json.dumps) as client:
@@ -49,7 +49,7 @@ async def UpPhoto(ans, img_name):
 
 @bot.on.pre_process()
 async def registration(ans: Message):
-	if len(await conn.fetch(f"SELECT person_id FROM date_person WHERE person_id={ans.from_id}"))==0:
+	if await StatePlayer.get_or_none(pers_id=ans.from_id) is None:
 		await bot.branch.add(ans.from_id, 'registration_branch')
 
 @bot.branch.cls_branch("registration_branch")
@@ -60,7 +60,6 @@ class Branch(ClsBranch):
 
 		🔸Убрать requests
 		🔸Написать парсинг через aiohttp
-		🔸Переписать заполнение бд под Tortoise
 
 		'''
 		os.mkdir(f"PhotoDatePlayers/{ans.from_id}")
@@ -75,12 +74,13 @@ class Branch(ClsBranch):
 		except:
 			shutil.copy('materials_bot/NoPhoto.png', f"PhotoDatePlayers/{ans.from_id}")
 			regfile = "NoPhoto"
-			await ans("У вас нет аватарки, вам временно поставлена эта!", attachment=...)
+			no_photo = await UpPhoto(ans, 'materials_bot/NoPhoto.png')
+			await ans("У вас нет аватарки, вам временно поставлена эта!", attachment=no_photo)
 
 		ElipsAva(ans.from_id,regfile)
 		reg_nick_id = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
-		date_reg = round(time())
-		gender_player = (1 if ans.text=='Женский' else 0)
+		now_time_reg = round(time())
+		num_gender_player = (1 if ans.text=='Женский' else 0)
 
 		# state_list=[ans.from_id,reg_nick_id,"1",race,"0","10",strength,hp,mind,agility,"","","",""]
 		# WriteProfil(state_list)
@@ -89,16 +89,41 @@ class Branch(ClsBranch):
 		# skills_list=[ans.from_id,"1","[0/30]","1","[0/10]","1","[0/10]","1","[0/10]","1","[0/10]"]
 		# WriteSkills(skills_list)
 
-		await conn.execute("INSERT INTO player_database VALUES ("
-		f"{ans.from_id}, '{reg_nick_id}', {gender_player}, {date_reg}, 0, 0, 0,"
-		"0, 0, 0, 76, 32, 19, 89, ..., 61, 6, , 0, 57, 100, 72, 100, 30, 100,"
-		"0, 100, 1, 500, 0, 0, 3, 0, 10, 6, 1, 1, 0)")
+		await StatePlayer.create(
+			pers_id=ans.from_id, 
+			pers_nick=reg_nick_id, 
+			pers_gender=num_gender_player,
+			date_reg=now_time_reg,
+			protect_arm=...
+		)
 
-		await conn.execute("INSERT INTO player_inventory VALUES ("
-		f"{ans.from_id}, '{reg_nick_id}',0,array[[1,5]],0,1,1,0,1)")
+		await PlayerRocket.create(
+			pers_id=ans.from_id, 
+			name_rocket='Тритон 8',
+			Will_be_supplemented=...,
+			Will_be_supplemented2=...,
+			Will_be_supplemented3=...,
+			Will_be_supplemented4=...,
+			Will_be_supplemented5=...,
+			Will_be_supplemented6=...
+		)
 
-		await conn.execute("INSERT INTO settings VALUES ("
-		f"{ans.from_id}, '{reg_nick_id}',0,0,0)")
+		await PlayerInventory.create(
+			pers_id=ans.from_id, 
+			pers_nickname=reg_nick_id, 
+			backpack_cells=...
+		)
+
+		await PlayerSettings.create(
+			pers_id=ans.from_id, 
+			pers_nickname=reg_nick_id, 
+			Will_be_supplemented=...,
+			Will_be_supplemented2=...,
+			Will_be_supplemented3=...,
+			Will_be_supplemented4=...,
+			Will_be_supplemented5=...,
+			Will_be_supplemented6=...
+		)
 
 		after_registration_button = [
 			[{'text':'Домой','color':'positive'}]
@@ -109,8 +134,9 @@ class Branch(ClsBranch):
 			"🔸Ваш персонаж - {ans.text[:-2]}ого рода\n"
 			"🔸Вам открыта новая локация - Домой, нажмите на неё", 
 			keyboard=after_registration_keyboard, attachment=...)
+		await bot.branch.exit(ans.peer_id)
 
-	async def round_registration_branch(self, ans: Message, *args):
+	async def round_registration_branch(self, ans: Message):
 		registration_button = [
 			[{'text':'Мужской','color':'positive'}],
 			[{'text':'Женский', 'color':'primary'}]
@@ -118,7 +144,6 @@ class Branch(ClsBranch):
 		registration_keyboard = keyboard_gen(registration_button, inline=True)
 		await ans("🔸Добро пожаловать в блок регистрации\n🔸Выберите род вашего персонажа!", 
 			keyboard=registration_keyboard, attachment=...)
-
 
 @bot.on.message(text=["домой", "!домой", "! домой", "/домой", "/ домой"], lower=True)
 async def start_place(ans: Message):
@@ -153,24 +178,31 @@ async def find_server(ans: Message):
 	sessions_button = []
 
 	sessions_list = [
-	["Сессия — 1","first_session"],
-	["Сессия — 2","second_session"],
-	["Сессия — 3","third_session"],
-	["Сессия — 4","fourth_session"],
-	["Сессия — 5","fiveth_session"]
+	["Сессия — 1",1],
+	["Сессия — 2",1],
+	["Сессия — 3",1],
+	["Сессия — 4",0],
+	["Сессия — 5",0]
 	]
 
 	load_sessions = ""
 
 	for sess in sessions_list:
-		session_player = await conn.fetch("SELECT %s,status_player FROM * WHERE id=%s" % (sess[1],ans.from_id))
-		light_bulb_load = ("💚" if session_player<=70 else "🧡")
-		light_bulb_load = ("❤️" if session_player>=100 else light_bulb_load)
+		if await SessionDate.get_or_none(sess_name=sess[0]) is None:
+			await SessionDate.create(
+				sess_name=sess[0],
+				battle_category=sess[1],
+				list_player_id=...
+			)
+
+		status_player = await StatePlayer.get(pers_id=ans.from_id).status_player
+		session_players = await SessionDate.get(pers_id=ans.from_id).now_seats_session
+		light_bulb_load = ("💚" if session_player<=70 else ("🧡" if session_player<100 else "❤️"))
 		load_sessions += f"{sess[0]}\n👥Игроков — [0/{session_player}]{light_bulb_load}\n"
-		if session_player[0][f"{sess[1]}"] < 100 or (session_player[0]["status_player"] >= ... 
-											   and session_player[0][f"{sess[1]}"] < 110):
+		if session_players < 100 or (session_players >= ... 
+											   and session_player < 120):
 			sessions_button.append([
-				[{'text':sess[0], 'color':'negative'}]
+				[{'text':sess[0], 'color':'positive'}]
 			])
 
 
@@ -188,22 +220,30 @@ async def find_server(ans: Message):
 async def connection_session(ans: Message):
 	'''Заполнить форму входа в мультиплеер'''
 	sessions_list = [
-	["Сессия — 1","first_session"],
-	["Сессия — 2","second_session"],
-	["Сессия — 3","third_session"],
-	["Сессия — 4","fourth_session"],
-	["Сессия — 5","fiveth_session"]
+	["Сессия — 1",1],
+	["Сессия — 2",1],
+	["Сессия — 3",1],
+	["Сессия — 4",0],
+	["Сессия — 5",0]
 	]
 	for sess in sessions_list:
-		session_player = await conn.fetch("SELECT %s,status_player FROM * WHERE id=%s" % (sess[1],ans.from_id))
+		if await SessionDate.get_or_none(sess_name=sess[0]) is None:
+			await SessionDate.create(
+				sess_name=sess[0],
+				battle_category=sess[1],
+				list_player_id=...
+			)
+		status_player = await StatePlayer.get(pers_id=ans.from_id).status_player
+		session_players = await SessionDate.get(pers_id=ans.from_id).now_seats_session
 		if sess[0] == ans.text and (session_player<100 or 
 							  (session_player<120 and session_player[0]["status_player"] >= ...)):
 			await ans("🔸Вы зашли в мультиплеер")
 			await bot.branch.add(ans.peer_id, "multiplayer_branch")
 			break
+
 		elif sess[0]==ans.text:
 			house_button = [
-				[{'text':'Домой', 'color':'positive'}]
+				[{'text':'Домой', 'color':'negative'}]
 			]
 			house_keyboard=keyboard_gen(house_button, inline=True)
 			await ans("🔸Сессия загружена приходите позже", keyboard=house_keyboard, attachment=...)
@@ -247,7 +287,7 @@ class Branch(ClsBranch):
 		else:
 			pass
 
-	async def round_buy_valuts_branch(self, ans: Message, *args):
+	async def round_buy_valuts_branch(self, ans: Message,):
 		round_buy_valuts_button = [
 			[{'text':'1000','color':'positive'}, {'text':'2500','color':'positive'}],
 			[{'text':'5000','color':'positive'}, {'text':'10000','color':'positive'}],
@@ -383,13 +423,13 @@ async def admin_mailing(ans: Message):
 			"🔹Больше 5 символов и меньше 500 символов",
 			keyboard=ad_mail_keyboard, attachment=...)
 		await bot.branch.add(ans.from_id, 'admin_mailing_branch')
+
 	else:
 		refusal_adm_mail_but = [
 			[{'text':'Домой', 'color':'negative'}]
 		]
 		refusal_adm_mail_keyboard = keyboard_gen(refusal_adm_mail_but, inline=True)
 		await ans("❌Отказано в доступе", keyboard=refusal_adm_mail_keyboard, attachment=...)
-
 
 @bot.branch.cls_branch('admin_mailing_branch')
 class Branch(ClsBranch):
@@ -413,20 +453,20 @@ class Branch(ClsBranch):
 	@rule_disposal(VBMLRule("адм <mailing_text>", lower=True))
 	async def exit_ad_mailing_branch(self, ans: Message, mailing_text):
 		if len(mailing_text)>=5 and len(mailing_text)<=500:
-			allowed_mailing_player = await conn.fetch("SELECT person_id FROM date_person WHERE indicator_mailing=1")
+			allowed_mailing_player = await StatePlayer.get(indicator_mailing=1)
 			accept_mailinig_button = [
 				[{'text':'Домой', 'color':'negative'}]
 			]
 			accept_mailinig_keyboard = keyboard_gen(accept_mailinig_button, inline=True)
 			disconn_mailinig_button = [
-				[{'text':'Помощь', 'color':'negative'}]
+				[{'text':'Рассылка откл', 'color':'negative'}]
 			]
 			disconn_mailinig_keyboard = keyboard_gen(disconn_mailinig_button, inline=True)
 			nick_admin_mailing = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
 			await ans('🎉Рассылка началась', attachment=...)
-			for person_id in allowed_mailing_player:
+			for person_date in allowed_mailing_player:
 				rand_num_mailing = random.randint(-2e9,2e9)
-				await bot.api.messages.send(user_id=person_id["person_id"],
+				await bot.api.messages.send(user_id=person_date.pers_id,
 								random_id=rand_num_mailing,
 								message=(f"📢Вам пришла рассылка\n\n"
 				 "🔸Вы можете ее отменить в разделе помощь\n\n<<{ans.text}>>"),
@@ -434,7 +474,7 @@ class Branch(ClsBranch):
 								attachment=...)
 
 			await ans("🎉Рассылка закончилась\n\n"
-			f"📢Отправлено — {len(all_person_id)}👤", 
+			f"📢Отправлено — {len(allowed_mailing_player)}👤", 
 			keyboard=accept_mailinig_keyboard, attachment=...)
 			await bot.branch.exit(ans.peer_id)
 
@@ -459,9 +499,10 @@ class Branch(ClsBranch):
 			"Длина сообщения должна быть больше 5 символов и меньше 500",
 			keyboard=round_ad_mailing_keyboard, attachment=...)
 
-@bot.on.message(text=["рассылка", "!рассылка", "! рассылка", "/рассылка", "/ рассылка"], lower=True)
+@bot.on.message(text=["рассылка", "!рассылка", "! рассылка", "/рассылка", 
+					  "/ рассылка","рассылка откл"], lower=True)
 async def panel_mailing(ans: Message):
-	check_indicator_mailing = (await conn.fetch(f"SELECT indicator_mailing FROM player_database WHERE person_id={ans.from_id}"))[0]["indicator_mailing"]
+	check_indicator_mailing = await StatePlayer.get(pers_id=ans.from_id).indicator_mailing
 	panel_mailing_button = [
 		[{'text':'Домой', 'color':'negative'}]
 	]
@@ -495,3 +536,12 @@ async def help(ans: Message):
 		   "🔸Вы можете отключить/включить рассылку\n"
 		   "🔸Можете открыть офёрту и соглашение", 
 		   keyboard=help_keyboard, attachment=...)
+
+async def init_tortoise():
+	await Tortoise.init(
+		db_url="postgres://glamuser:GisMyVoron1974@127.0.0.1:5432/glamdata", 
+		modules={"models": ["models"]}
+	)
+	await Tortoise.generate_schemas()
+
+bot.run_polling(on_startup=init_tortoise)
