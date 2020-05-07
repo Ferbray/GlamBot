@@ -16,7 +16,7 @@ from operator import itemgetter
 
 from vkbottle import Bot, Message, keyboard_gen,VKError
 from vkbottle.branch import ClsBranch, ExitBranch, rule_disposal, Branch
-from vkbottle.rule import AbstractMessageRule
+from vkbottle.rule import AbstractMessageRule, VBMLRule
 from vkbottle.keyboard import Keyboard, Text
 from vbml import PatchedValidators
 from tortoise import Tortoise
@@ -50,7 +50,14 @@ async def UpPhoto(ans, img_name):
 @bot.on.pre_process()
 async def registration(ans: Message):
 	if await StatePlayer.get_or_none(pers_id=ans.from_id) is None:
-		await bot.branch.add(ans.from_id, 'registration_branch')
+		registration_button = [
+			[{'text':'Мужской','color':'positive'}],
+			[{'text':'Женский', 'color':'primary'}]
+		]
+		registration_keyboard = keyboard_gen(registration_button, inline=True)
+		await ans("🔸Добро пожаловать в блок регистрации\n🔸Выберите род вашего персонажа!", 
+			keyboard=registration_keyboard, attachment=...)
+		await bot.branch.add(ans.peer_id, 'registration_branch')
 
 @bot.branch.cls_branch("registration_branch")
 class Branch(ClsBranch):
@@ -77,7 +84,7 @@ class Branch(ClsBranch):
 			no_photo = await UpPhoto(ans, 'materials_bot/NoPhoto.png')
 			await ans("У вас нет аватарки, вам временно поставлена эта!", attachment=no_photo)
 
-		ElipsAva(ans.from_id,regfile)
+		ElipsAva(ans.from_id, regfile)
 		reg_nick_id = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
 		now_time_reg = round(time())
 		num_gender_player = (1 if ans.text=='Женский' else 0)
@@ -132,7 +139,7 @@ class Branch(ClsBranch):
 			keyboard=after_registration_keyboard, attachment=...)
 		await bot.branch.exit(ans.peer_id)
 
-	async def round_registration_branch(self, ans: Message):
+	async def round_registration_branch(self, ans: Message, *args):
 		registration_button = [
 			[{'text':'Мужской','color':'positive'}],
 			[{'text':'Женский', 'color':'primary'}]
@@ -193,10 +200,10 @@ async def find_server(ans: Message):
 
 		status_player = await StatePlayer.get(pers_id=ans.from_id).status_player
 		session_players = await SessionDate.get(pers_id=ans.from_id).now_seats_session
-		light_bulb_load = ("💚" if session_player<=70 else ("🧡" if session_player<100 else "❤️"))
+		light_bulb_load = ("💚" if session_player<=40 else ("🧡" if session_player<80 else "❤️"))
 		load_sessions += f"{sess[0]}\n👥Игроков — [0/{session_player}]{light_bulb_load}\n"
-		if session_players < 100 or (session_players >= ... 
-											   and session_player < 120):
+		if session_players < 80 or (session_players >= 2 
+											   and session_player < 100):
 			sessions_button.append([
 				[{'text':sess[0], 'color':'positive'}]
 			])
@@ -231,8 +238,8 @@ async def connection_session(ans: Message):
 			)
 		status_player = await StatePlayer.get(pers_id=ans.from_id).status_player
 		session_players = await SessionDate.get(pers_id=ans.from_id).now_seats_session
-		if sess[0] == ans.text and (session_player<100 or 
-							  (session_player<120 and session_player[0]["status_player"] >= ...)):
+		if sess[0] == ans.text and (session_player<80 or 
+							  (session_player<100 and session_player[0]["status_player"] >= 2)):
 			await ans("🔸Вы зашли в мультиплеер")
 			await bot.branch.add(ans.peer_id, "multiplayer_branch")
 			break
@@ -512,6 +519,13 @@ async def panel_mailing(ans: Message):
 	await conn.execute(f"UPDATE player_database SET check_indicator_mailing={diff_indicator_mailing} WHERE person_id={ans.from_id}")
 	await ans(message_answer, keyboard=panel_mailing_button, attachment=...)
 
+@bot.on.message(text=["quiet", "!quiet", "! quiet", "/quiet", "/ quiet"], lower=True)
+async def help(ans: Message):
+	await ans(await StatePlayer.get(pers_id=ans.from_id))
+	await ans(await PlayerRocket.get(pers_id=ans.from_id))
+	await ans(await PlayerInventory.get(pers_id=ans.from_id))
+	await ans(await PlayerSettings.get(pers_id=ans.from_id))
+
 @bot.on.message(text=["помощь", "!помощь", "! помощь", "/помощь", "/ помощь"], lower=True)
 async def help(ans: Message):
 	help_button = [
@@ -536,7 +550,7 @@ async def help(ans: Message):
 async def init_tortoise():
 	await Tortoise.init(
 		db_url="postgres://glamuser:GisMyVoron1974@127.0.0.1:5432/glamdata", 
-		modules={"models": ["models"]}
+		modules={"models": ["tortoise_models"]}
 	)
 	await Tortoise.generate_schemas()
 
