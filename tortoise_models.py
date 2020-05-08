@@ -46,6 +46,7 @@ class StatePlayer(Model):
     view_react_bot = fields.IntField(Default=1) #Type view reaction bot - image/text - 1/0
     status_player = fields.IntField(Default=0)
     status_learning = fields.IntField(Default=0)
+    conn_type_sess = fields.IntField(Default=0)
 
     class Meta:
         database = "player_database"
