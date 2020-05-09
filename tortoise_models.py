@@ -47,6 +47,9 @@ class StatePlayer(Model):
     status_player = fields.IntField(Default=0)
     status_learning = fields.IntField(Default=0)
     conn_type_sess = fields.IntField(Default=0)
+    ban_report = fields.IntField(Default=0)
+    ban_mult = fields.IntField(Default=0)
+    comment_donate = fields.IntField(Default=0)
 
     class Meta:
         database = "player_database"

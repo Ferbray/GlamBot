@@ -22,8 +22,9 @@ from vbml import PatchedValidators
 from tortoise import Tortoise
 from aiohttp import ClientSession
 import asyncio
+import aioqiwi
 
-from qiwi_wrapper import *
+from qiwi_wrapper import qiwi_payment, qiwi_history
 from tortoise_models import *
 bot = Bot('9c6713c47ccc55cbbb5ba7b712c1a8a5e7c3c419da361d12f60dfd27ad3c882ed28c344b898193733989b', mobile=False)
 
@@ -265,12 +266,6 @@ async def connection_session(ans: Message):
 
 @bot.branch.cls_branch("market_branch")
 class Branch(ClsBranch):
-	'''Дописать код доната
-
-	🔸Проверка по оплате
-	🔸Отмена оплаты
-	🔸Сама оплата на aiohttp + aioqiwi
-	'''
 	@rule_disposal(VBMLRule("Выйти", lower=True))
 	async def exit_market_branch(self, ans: Message):
 		exit_market_button = [
@@ -283,23 +278,80 @@ class Branch(ClsBranch):
 
 	@rule_disposal(VBMLRule("<ammount_gold:int>", lower=True))
 	async def buy_valuts_branch(self, ans: Message, ammount_gold):
-		pass
+		donate_time = round(time())
+		count_ruble = (1 if ammount_gold<=10 else 
+				 (ammount_gold/10 if ammount_gold<=900000 else 90000))
 
-	@rule_disposal(VBMLRule("Проверка оплаты", lower=True))
-	async def check_buy_valuts_branch(self, ans: Message):
-		check_buy_valuts_button = [
+		link_payment = await qiwi_payment(donate_time, cost_ruble)
+
+		player_state = await StatePlayer.get(pers_id=ans.from_id)
+		player_state.comment_donate = donate_time
+		await player_state.save()
+
+		buy_valuts_button = [
+			[{'text': 'НАЖИМАЙ СЮДА!', 'type': 'open_link', 'link': link_payment}], 
 			[{'text':'Проверка оплаты', 'color':'positive'}],
 			[{'text':'Отмена оплаты', 'color':'negative'}]
 		]
-		check_buy_valuts_keyboard = keyboard_gen(check_buy_valuts_button, inline=True)
-		await ans("Квитанция в обработке, повторите через 10 секунд!", keyboard=check_buy_valuts_keyboard)
+		buy_valuts_keyboard = keyboard_gen(buy_valuts_button, inline=True)
+		await ans("1️⃣Произведите оплату по ссылке\n"
+			"🔸За вас может оплатить друг\n\n"
+			"2️⃣Сделайте проверку или отмену\n"
+			"🔸Если вы оплатили и нажмёте на отмену, то ваши средства пропадут❗\n"
+			"🔸Нажимайте сразу после оплаты, иначе ваш запрос пропадет❗\n\n", 
+			keyboard=buy_valuts_keyboard, attachment=...)
+
+	@rule_disposal(VBMLRule("Проверка оплаты", lower=True))
+	async def check_buy_valuts_branch(self, ans: Message):
+		payment_state = await StatePlayer.get(pers_id=ans.from_id)
+		if await qiwi_history(payment_state.comment_donate) is True:
+			payment_state.now_donate_balance += payment_state.comment_donate*10
+			payment_state.comment_donate = 0
+			await payment_state.save()
+
+			accept_val_button = [
+				[{'text':'Домой', 'color':'positive'}]
+			]
+			accept_val_keyboard = keyboard_gen(accept_val_keyboard, inline=True)
+			await ans("🔸Вы успешно приобрели валюту\nНажмите на кнопку <<Домой>>, чтобы вернуться", 
+			 keyboard=accept_val_keyboard, attachment=...)
+			await bot.branch.exit(ans.peer_id)
+
+		else:
+			check_buy_valuts_button = [
+				[{'text':'Проверка оплаты', 'color':'positive'}],
+				[{'text':'Отмена оплаты', 'color':'negative'}]
+			]
+			check_buy_valuts_keyboard = keyboard_gen(check_buy_valuts_button, inline=True)
+			await ans("Квитанция в обработке, повторите через 10 секунд!", 
+			 keyboard=check_buy_valuts_keyboard, attachment=...)
 
 	@rule_disposal(VBMLRule("Отмена оплаты", lower=True))
 	async def cancel_buy_valuts_branch(self, ans: Message):
-		if ...:
-			pass
+		payment_state = await StatePlayer.get(pers_id=ans.from_id)
+		if await qiwi_history(payment_state.comment_donate) is True:
+			payment_state.now_donate_balance += payment_state.comment_donate*10
+			payment_state.comment_donate = 0
+			await payment_state.save()
+
+			accept_val_button = [
+				[{'text':'Домой', 'color':'positive'}]
+			]
+			accept_val_keyboard = keyboard_gen(accept_val_keyboard, inline=True)
+			await ans("🔸Оплата все таки прошла\nНажмите на кнопку <<Домой>>, чтобы вернуться", 
+			 keyboard=accept_val_keyboard, attachment=...)
+			await bot.branch.exit(ans.peer_id)
+
 		else:
-			pass
+			payment_state.comment_donate = 0
+			await payment_state.save()
+			close_buy_valuts_button = [
+				[{'text':'Домой', 'color':'negative'}]
+			]
+			close_buy_valuts_keyboard = keyboard_gen(close_buy_valuts_button, inline=True)
+			await ans("🔸Приходите снова", 
+			 keyboard=close_buy_valuts_keyboard, attachment=...)
+			await bot.branch.exit(ans.peer_id)
 
 	async def round_buy_valuts_branch(self, ans: Message,):
 		round_buy_valuts_button = [
@@ -343,6 +395,26 @@ async def my_date(ans: Message, id_player):
 			"🔸Вы можете нажать на кнопку - отмены, если не хотите отправлять ответ",
 			keyboard=allowed_keyboard, attachment=...)
 		await bot.branch.add(ans.peer_id, "root_branch", id_mail_player=id_player)
+
+	else:
+		access_denied_button = [
+			[{'text':'Домой', 'color':'negative'}]
+		]
+		access_denied_keyboard = keyboard_gen(access_denied_button, inline=True)
+		await ans("❌Отказано в доступе", keyboard=access_denied_keyboard)
+
+@bot.on.message(text="забанить реп <id_player:int>", lower=True)
+async def my_date(ans: Message, id_player):
+	if ans.text == 185031237:
+		accept_ban_button = [
+			[{'text':'Домой', 'color':'negative'}]
+		]
+		accept_ban_keyboard = keyboard_gen(accept_ban_button, inline=True)
+		pers_state = await StatePlayer.get(pers_id=ans.from_id)
+		pers_state.ban_report = 1
+		await pers_state.save()
+		await ans("🔸Репорт игрока успешно забанен\n",
+			keyboard=accept_ban_keyboard, attachment=...)
 
 	else:
 		access_denied_button = [
