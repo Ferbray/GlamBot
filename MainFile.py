@@ -14,7 +14,7 @@ from time import ctime,time
 from decimal import Decimal
 from operator import itemgetter
 
-from vkbottle import Bot, Message, keyboard_gen,VKError
+from vkbottle import Bot, Message, keyboard_gen, VKError
 from vkbottle.branch import ClsBranch, ExitBranch, rule_disposal, Branch
 from vkbottle.rule import AbstractMessageRule, VBMLRule
 from vkbottle.keyboard import Keyboard, Text
@@ -26,6 +26,8 @@ import aioqiwi
 
 from qiwi_wrapper import qiwi_payment, qiwi_history
 from tortoise_models import *
+from ImageEngine import *
+
 bot = Bot('9c6713c47ccc55cbbb5ba7b712c1a8a5e7c3c419da361d12f60dfd27ad3c882ed28c344b898193733989b', mobile=False)
 
 async def get_info(upload_url: str, files: dict):
@@ -76,29 +78,35 @@ class Branch(ClsBranch):
 				async with session.get(vk[0].photo_400_orig) as response:
 					content = await response.read()
 
-			regfile = vk[0].photo_400_orig.split("/")[-1]
-			regfile = regfile.split('.')[0]
+			cut_url = vk[0].photo_400_orig.split("/")[-1]
+			name_ava = cut_url.split('.')[0]
 			
-			with open(f"PhotoDatePlayers/{ans.from_id}/{regfile}.png", 'wb') as fh:
+			with open(f"PhotoDatePlayers/{ans.from_id}/{name_ava} orig_400.png", 'wb') as fh:
 				fh.write(content)
 
 		except:
-			shutil.copy('materials_bot/NoPhoto.png', f"PhotoDatePlayers/{ans.from_id}")
-			regfile = "NoPhoto"
-			no_photo = await UpPhoto(ans, 'materials_bot/NoPhoto.png')
-			await ans("У вас нет аватарки, вам временно поставлена эта!", attachment=no_photo)
+			shutil.copy('materials_bot/NoPhoto orig_400.png', f"PhotoDatePlayers/{ans.from_id}")
+			await ans("У вас нет аватарки, вам временно поставлена эта!", attachment="photo-191374726_457239031")
+			name_ava = "NoPhoto"
 
-		ElipsAva(ans.from_id, regfile)
+		ElipsAva(ans.from_id, name_ava)
 		reg_nick_id = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
+		list_date = [
+			reg_nick_id,
+			ans.from_id,
+			"500",
+			"0",
+			"57",
+			"76",
+			"72",
+			"30",
+			"56",
+			"..."
+		]
 		now_time_reg = round(time())
 		num_gender_player = (1 if ans.text=='Женский' else 0)
 
-		# state_list=[ans.from_id,reg_nick_id,"1",race,"0","10",strength,hp,mind,agility,"","","",""]
-		# WriteProfil(state_list)
-		# inventory_list=[ans.from_id,"0","0","Без оружный","Отсутствует","Отсутствует","Отсутствует","Отсутствует","Отсутсвует","Отсутвует","Отсутствует","Отсутствует"]
-		# WriteInventory(inventory_list)
-		# skills_list=[ans.from_id,"1","[0/30]","1","[0/10]","1","[0/10]","1","[0/10]","1","[0/10]"]
-		# WriteSkills(skills_list)
+		WritePersProfil(list_date)
 
 		await StatePlayer.create(
 			pers_id=ans.from_id, 
@@ -108,7 +116,6 @@ class Branch(ClsBranch):
 			protect_arm=...
 		)
 		
-		first_build = [[0, 0],[1001, 1]]
 
 		await PlayerRocket.create(
 			pers_id=ans.from_id, 
@@ -140,7 +147,7 @@ class Branch(ClsBranch):
 		await ans("🔸Поздравляю, вы успешно прошли регистрацию\n"
 			"🔸Ваш персонаж - {ans.text[:-2]}ого рода\n"
 			"🔸Вам открыта новая локация - Домой, нажмите на неё", 
-			keyboard=after_registration_keyboard, attachment=...)
+			keyboard=after_registration_keyboard, attachment=f'PhotoDatePlayers/{ans.from_id}/{ans.from_id} profile.png')
 		await bot.branch.exit(ans.peer_id)
 
 	async def round_registration_branch(self, ans: Message, *args):
@@ -166,7 +173,7 @@ async def start_place(ans: Message):
 		   "🔹Узнать топ игроков\n"
 		   "🔹Посмотреть свои данные\n"
 		   "🔹Задать вопросы команде разработчиков", 
-		   keyboard=house_keyboard, attachment=...)
+		   keyboard=house_keyboard, attachment="photo-191374726_457239029")
 
 @bot.on.message(text=["топ игроков", "!топ игроков", "! топ игроков", 
 					  "/топ игроков", "/ топ игроков"], lower=True)
@@ -190,6 +197,16 @@ async def find_server(ans: Message):
 	["Сессия — 3",1],
 	["Сессия — 4",0],
 	["Сессия — 5",0]
+	]
+
+	list_photo = [
+		"photo-191374726_457239032",
+		"photo-191374726_457239033",
+		"photo-191374726_457239034",
+		"photo-191374726_457239035",
+		"photo-191374726_457239036",
+		"photo-191374726_457239037",
+		"photo-191374726_457239038"
 	]
 
 	load_sessions = ""
@@ -222,7 +239,7 @@ async def find_server(ans: Message):
 		   "Так же сессии нужны, чтобы снизить нагрузку в локациях\n"
 		   "🔸Покупая статус — ..., вы сможете заходить на сессию с загрузкой до 120 человек\n\n"
 		   f"🔹Сессии:\n{load_sessions}", 
-		   keyboard=session_keyboard, attachment=...)
+		   keyboard=session_keyboard, attachment=list_photo[random.randint(0,6)])
 
 @bot.on.message(text=["сессия — 1", "сессия — 2", "сессия — 3", "сессия — 4", "сессия — 5"], lower=True)
 async def connection_session(ans: Message):
@@ -353,6 +370,7 @@ class Branch(ClsBranch):
 			 keyboard=close_buy_valuts_keyboard, attachment=...)
 			await bot.branch.exit(ans.peer_id)
 
+	@rule_disposal(VBMLRule("<>", lower=True))
 	async def round_buy_valuts_branch(self, ans: Message,):
 		round_buy_valuts_button = [
 			[{'text':'1000','color':'positive'}, {'text':'2500','color':'positive'}],
@@ -363,7 +381,7 @@ class Branch(ClsBranch):
 		await ans("🔸Продавец - 'Я не понял, какое количество золота вы хотите приобрести?'\n"
 			"🔸Напишите количество золота не больше 900к!\n"
 			"Так же вы можете выбрать сумму, которую часто используют, нажатием на кнопку", 
-			keyboard=round_buy_valuts_keyboard, attachment=...)
+			keyboard=round_buy_valuts_keyboard, attachment="photo-191374726_457239030")
 
 @bot.on.message(text=["магазин", "!магазин", "! магазин", "/магазин", "/ магазин"], lower=True)
 async def join_market(ans: Message):
@@ -381,7 +399,7 @@ async def join_market(ans: Message):
 		   "500₽ — 5000🔶\n"
 		   "1000₽ — 10000🔶\n\n"
 		   "🔸Макс покупка голды — 900000🔶", 
-		   keyboard=join_market_keyboard, attachment=...)
+		   keyboard=join_market_keyboard, attachment="photo-191374726_457239030")
 	await bot.branch.add(ans.peer_id, "market_branch")
 
 @bot.on.message(text="ответить <id_player:int>", lower=True)
@@ -575,13 +593,6 @@ async def admin_mailing(ans: Message):
 
 @bot.branch.cls_branch('admin_mailing_branch')
 class Branch(ClsBranch):
-	'''Необходимо добавить, чтобы Админ мог отправить при рассылке
-
-	🔸Клавиатуру
-	🔸Фотографию
-	🔸Пересланное письмо
-
-	'''
 	@rule_disposal(VBMLRule("Отменить", lower=True))
 	async def exit_ad_mailing_branch(self, ans: Message):
 		stop_adm_button = [
@@ -611,7 +622,7 @@ class Branch(ClsBranch):
 				await bot.api.messages.send(user_id=person_date.pers_id,
 								random_id=rand_num_mailing,
 								message=(f"📢Вам пришла рассылка\n\n"
-				 "🔸Вы можете ее отменить в разделе помощь\n\n<<{mailing_text}>>"),
+				 "🔸Вы можете ее отменить в разделе помощь\n\n<<{mailing_text}>>", ans.fwd_messages[0].text),
 								keyboard=disconn_mailinig_keyboard,
 								attachment=...)
 

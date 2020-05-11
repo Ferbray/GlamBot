@@ -19,7 +19,7 @@ class StatePlayer(Model):
     strength_arm_vest = fields.IntField(Default=32)
     strength_arm_gloves = fields.IntField(Default=19)
     strength_arm_footwears = fields.IntField(Default=89)
-    protect_arm = fields.IntField()
+    protect_arm = fields.IntField(Defaul=...)
     weapon_clogging = fields.IntField(Default=61)
     weapon_catridge = fields.IntField(Default=6)
     time_reload_weapon = fields.BigIntField(Default=0)
