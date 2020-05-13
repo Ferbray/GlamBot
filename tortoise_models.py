@@ -15,11 +15,12 @@ class StatePlayer(Model):
     located_in_mult = fields.IntField(Default=0) #Now player in multipayer or not 0/1.If number 3, then multipayer forbidden
     time_end_bann = fields.BigIntField(Default=0)
     type_step = fields.IntField(Default=0) #Old step
-    strength_arm_head = fields.IntField(Default=76)
-    strength_arm_vest = fields.IntField(Default=32)
-    strength_arm_gloves = fields.IntField(Default=19)
-    strength_arm_footwears = fields.IntField(Default=89)
-    protect_arm = fields.IntField(Defaul=...)
+    strength_arm_head = fields.IntField(Default=130)
+    strength_arm_vest = fields.IntField(Default=40)
+    strength_arm_gloves = fields.IntField(Default=20)
+    strength_arm_pant = fields.IntField(Default=25)
+    strength_arm_footwears = fields.IntField(Default=24)
+    protect_arm = fields.IntField(Defaul=17)
     weapon_clogging = fields.IntField(Default=61)
     weapon_catridge = fields.IntField(Default=6)
     time_reload_weapon = fields.BigIntField(Default=0)
@@ -91,6 +92,7 @@ class PlayerInventory(Model):
     armor_head = fields.IntField(Default=1)
     armor_vest = fields.IntField(Default=1)
     armor_gloves = fields.IntField(Default=1)
+    armor_pant = fields.IntField(Default=1)
     armor_footwears = fields.IntField(Default=1)
 
     class Meta:

@@ -65,12 +65,6 @@ async def registration(ans: Message):
 class Branch(ClsBranch):
 	@rule_disposal(VBMLRule(["Мужской","Женский"], lower=True))
 	async def join_registration_branch(self, ans: Message):
-		'''Планирование
-
-		🔸Написать генерацию заполнения профиля и других плюх
-		🔸Увеличить регистрацию
-
-		'''
 		os.mkdir(f"PhotoDatePlayers/{ans.from_id}")
 		try:
 			vk = await bot.api.users.get(user_ids=ans.from_id, fields="photo_400_orig")
@@ -93,7 +87,7 @@ class Branch(ClsBranch):
 		reg_nick_id = (await bot.api.users.get(user_ids=ans.from_id))[0].first_name
 		list_date = [
 			reg_nick_id,
-			ans.from_id,
+			str(ans.from_id),
 			"500",
 			"0",
 			"57",
@@ -106,14 +100,13 @@ class Branch(ClsBranch):
 		now_time_reg = round(time())
 		num_gender_player = (1 if ans.text=='Женский' else 0)
 
-		WritePersProfil(list_date)
+		WritePersProfile(list_date)
 
 		await StatePlayer.create(
 			pers_id=ans.from_id, 
 			pers_nick=reg_nick_id, 
 			pers_gender=num_gender_player,
-			date_reg=now_time_reg,
-			protect_arm=...
+			date_reg=now_time_reg
 		)
 		
 
@@ -150,7 +143,7 @@ class Branch(ClsBranch):
 			keyboard=after_registration_keyboard, attachment=f'PhotoDatePlayers/{ans.from_id}/{ans.from_id} profile.png')
 		await bot.branch.exit(ans.peer_id)
 
-	async def round_registration_branch(self, ans: Message, *args):
+	async def round_registration_branch(self, ans: Message):
 		registration_button = [
 			[{'text':'Мужской','color':'positive'}],
 			[{'text':'Женский', 'color':'primary'}]
@@ -178,13 +171,28 @@ async def start_place(ans: Message):
 @bot.on.message(text=["топ игроков", "!топ игроков", "! топ игроков", 
 					  "/топ игроков", "/ топ игроков"], lower=True)
 async def top_player(ans: Message):
-	'''Заполнить кодом топ игроков по валюте - рублям'''
+	'''Написать код для заполнения картинки'''
+	list_player = [[pers.pers_nick, pers.pers_id, pers.now_common_balance] for pers in await StatePlayer.get()]
+	await ans(list_player)
+	list_player.sort(key=itemgetter(1), reverse=True)
+
+	my_top = 0
+
+	for _ in list_player:
+		if _[1]==ans.from_id:
+			list_player = list_player[0:9].append(_)
+			break
+		my_top+=1
+
+	await WriteTopPlayer(list_player, str(my_top), ans.from_id)
+	photo_top_player = await UpPhoto(ans, f'PhotoDatePlayers/{ans.from_id}/{ans.from_id} top_player.png')
+
 	top_button = [
 		[{'text':'Домой', 'color':'negative'}]
 	]
 	top_keyboard = keyboard_gen(top_button, inline=True)
 	await ans("🔸Вам показан топ игроков GlamBot-а\n🔸Здесь собраны самые величайшие бойцы", 
-		   keyboard=top_keyboard, attachment=...)
+		   keyboard=top_keyboard, attachment=photo_top_player)
 
 @bot.on.message(text=["найти сервер", "!найти сервер", "! найти сервер", 
 					  "/найти сервер", "/ найти сервер"], lower=True)
@@ -192,11 +200,11 @@ async def find_server(ans: Message):
 	sessions_button = []
 
 	sessions_list = [
-	["Сессия — 1",1],
-	["Сессия — 2",1],
-	["Сессия — 3",1],
-	["Сессия — 4",0],
-	["Сессия — 5",0]
+	["Сессия — 1", 1],
+	["Сессия — 2", 1],
+	["Сессия — 3", 1],
+	["Сессия — 4", 0],
+	["Сессия — 5", 0]
 	]
 
 	list_photo = [
@@ -245,11 +253,11 @@ async def find_server(ans: Message):
 async def connection_session(ans: Message):
 	'''Заполнить форму входа в мультиплеер'''
 	sessions_list = [
-	["Сессия — 1",1],
-	["Сессия — 2",1],
-	["Сессия — 3",1],
-	["Сессия — 4",0],
-	["Сессия — 5",0]
+	["Сессия — 1", 1],
+	["Сессия — 2", 1],
+	["Сессия — 3", 1],
+	["Сессия — 4", 0],
+	["Сессия — 5", 0]
 	]
 	for sess in sessions_list:
 		if await SessionDate.get_or_none(sess_name=sess[0]) is None:
@@ -370,8 +378,7 @@ class Branch(ClsBranch):
 			 keyboard=close_buy_valuts_keyboard, attachment=...)
 			await bot.branch.exit(ans.peer_id)
 
-	@rule_disposal(VBMLRule("<>", lower=True))
-	async def round_buy_valuts_branch(self, ans: Message,):
+	async def round_buy_valuts_branch(self, ans: Message):
 		round_buy_valuts_button = [
 			[{'text':'1000','color':'positive'}, {'text':'2500','color':'positive'}],
 			[{'text':'5000','color':'positive'}, {'text':'10000','color':'positive'}],

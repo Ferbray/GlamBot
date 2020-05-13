@@ -1,0 +1,199 @@
+Предметы мультиплеера
+
+
+
+Одежда
+
+
+
+Шлем
+Id - 1
+Name - Шлем из железа и обычного стекла
+Short description - ...
+Cost - 1700
+Protection - 10
+Strength - 130
+
+Id - 2
+Name - Шлем из алюминия и обычного стекла
+Short description - ...
+Cost - 2400
+Protection - 18
+Strength - 110
+
+Id - 3
+Name - Шлем из титана и обычного стекла
+Short description - ...
+Cost - 8300
+Protection - 45
+Strength - 240
+
+Id - 4
+Name - Шлем из железа и закаленного стекла
+Short description - ...
+Cost - 2600
+Protection - 21
+Strength - 150
+
+Id - 5
+Name - Шлем из алюминия и закаленного стекла
+Short description - ...
+Cost - 4100
+Protection - 32
+Strength - 140
+
+
+
+
+Жилет
+Id - 1
+Name - Жилет из хлопка
+Short description - ...
+Cost - 800
+Protection - 3
+Strength - 40
+
+Id - 2
+Name - Жилет из плотной кевраловой ткани
+Short description - ...
+Cost - 1700
+Protection - 12
+Strength - 90
+
+Id - 3
+Name - Жилет с железной пластиной 30 мм
+Short description - ...
+Cost - 3500
+Protection - 25
+Strength - 120
+
+Id - 4
+Name - Жилет с железной пластиной 50 мм
+Short description - ...
+Cost - 4100
+Protection - 41
+Strength - 130
+
+Id - 5
+Name - Жилет с железной пластиной 80 мм
+Short description - ...
+Cost - 5300
+Protection - 58
+Strength - 140
+
+
+
+
+Штаны
+Id - 1
+Name - Штаны из хлопка
+Short description - ...
+Cost - 600
+Protection - 1
+Strength - 25
+
+Id - 2
+Name - Штаны из плотной кевларовой ткани
+Short description - ...
+Cost - 1300
+Protection - 6
+Strength - 66
+
+Id - 3
+Name - Штаны с жел-ой пластины в областе паха (30 мм)
+Short description - ...
+Cost - 2200
+Protection - 21
+Strength - 92
+
+Id - 4
+Name - Штаны с жел-ой пластины в областе паха (50 мм)
+Short description - ...
+Cost - 3400
+Protection - 34
+Strength - 115
+
+Id - 5
+Name - Штаны с жел-ой пластины в областе паха (80 мм)
+Short description - ...
+Cost - 4200
+Protection - 46
+Strength - 129
+
+
+
+
+Перчатки
+Id - 1
+Name - Перчатки из плотного хлопка
+Short description - ...
+Cost - 280
+Protection - 1
+Strength - 20
+
+Id - 2
+Name - Перчатки связаные из плотных ниток
+Short description - ...
+Cost - 560
+Protection - 3
+Strength - 37
+
+Id - 3
+Name - Перчатки из кевлара
+Short description - ...
+Cost - 920
+Protection - 6
+Strength - 42
+
+Id - 4
+Name - Перчатки из плотного хлопка с пластмассовыми ставками
+Short description - ...
+Cost - 830
+Protection - 17
+Strength - 76
+
+Id - 5
+Name - Перчатки из плотных ниток с пластмассовыми ставками
+Short description - ...
+Cost - 1420
+Protection - 25
+Strength - 92
+
+
+
+
+Ботинки
+Id - 1
+Name - Ботинки с применением сжатого хлопка
+Short description - ...
+Cost - 450
+Protection - 2
+Strength - 24
+
+Id - 2
+Name - Ботинки с применением кевларовой ткани
+Short description - ...
+Cost - 880
+Protection - 11
+Strength - 46
+
+Id - 3
+Name - Ботинки с сжатым хлопком и пластмассовыми ставками
+Short description - ...
+Cost - 1500
+Protection - 15
+Strength - 69
+
+Id - 4
+Name - Ботинки с кевларовой тканью и пластмассовыми ставками
+Short description - ...
+Cost - 2750
+Protection - 24
+Strength - 82
+
+Id - 5
+Name - Ботинки с сжатым хлопком и железными ставками
+Short description - ...
+Cost - 4100
+Protection - 33
+Strength - 101
