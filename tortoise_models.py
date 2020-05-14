@@ -1,141 +1,203 @@
 from tortoise import fields
 from tortoise.models import Model
 
+'''Explanation fields - 1
 
+Location - Inventory/feature_armors;
 
-class StatePlayer(Model):
+Type - List of lists;
+
+Index list: 
+0 - head;
+1 - vest; 
+2 - gloves; 
+3 - trousers; 
+4 - shoes
+
+Index lists:
+0 - id;
+1 - strength;
+2 - protection;
+
+Example:
+[
+    [1, 67, 23],
+    [4, 32, 55],
+    [0, 0, 0],
+    [3, 90, 30],
+    [10, 12, 230]
+]
+
+'''
+
+'''Explanation fields - 2
+
+Location - Rocket/places_free;
+
+Type - List of lists;
+
+Index list: 
+It is created when a rocket is purchased, depending on its characteristics.
+
+Index lists:
+0 - cordinat x;
+1 - cordinat y;
+2 - size place - It's default sizes - .../.../...
+3 - type of construction: Default - 0
+
+Example:
+[
+    [100, 167, 23, 0],
+    [532, 50, 15, 1],
+    [907, 0, 5]
+]
+
+'''
+
+'''Explanation fields - 3
+
+Location - SendMessChat/feature_message;
+
+Type - List;
+
+Index list: 
+
+0 - id;
+1 - text; 
+2 - date; 
+3 - type: GLOBAL/LOCAL/PRIVATE; 
+4 - whom: If type = 2 Then whom_to_send = recipient_id
+5 - user_nick
+
+Example:
+[
+    666,
+    "Hello multiplayer",
+    [14.05.2020:17:40],
+    type: Global
+    Whom: 0
+]
+
+'''
+
+class Main(Model):
     id = fields.IntField(pk=True)
-    pers_id = fields.IntField()
-    pers_nick = fields.CharField(max_length=30)
-    pers_gender = fields.IntField() #Man - 0; Women - 1
+
+    user_id = fields.IntField()
+    user_nick = fields.CharField(max_length=30)
+    user_gender = fields.IntField() #Man - 0; Women - 1
     date_reg = fields.BigIntField()
+
+    user_status = fields.IntField(default=0)
+    user_progress = fields.JSONField() #Type list; Index: 0 - exp; 1 - lvl
+    user_balance = fields.JSONField() #Type list; Index: 0 - common; 1 - donate
+    user_location = fields.IntField(default=0) #0 - Loc Menu; 1,2, ... - Loc Multiplayer; -1 - Multiplayer forbidden
+
+    timeout_ban1 = fields.BigIntField(default=0) #Timeout of multiplayer ban
+    timeout_ban2 = fields.BigIntField(default=0) #Timeout of report ban
+    donate_id = fields.IntField(default=0) #Indicated in the description
+    
+    class Meta:
+        database = "main"
+
+class Multiplayer(Model):
+    id = fields.IntField(pk=True)
+
+    session_num = fields.IntField()
     cordinat_x = fields.IntField(default=2112)
     cordinat_y = fields.IntField(default=2048)
-    pers_loc = fields.IntField(default=0) #Where is the player
-    located_in_mult = fields.IntField(default=0) #Now player in multipayer or not 0/1.If number 3, then multipayer forbidden
-    time_end_bann = fields.BigIntField(default=0)
-    type_step = fields.IntField(default=0) #Old step
-    strength_arm_head = fields.IntField(default=130)
-    strength_arm_vest = fields.IntField(default=40)
-    strength_arm_gloves = fields.IntField(default=20)
-    strength_arm_pant = fields.IntField(default=25)
-    strength_arm_footwears = fields.IntField(default=24)
-    protect_arm = fields.IntField(default=17)
-    weapon_clogging = fields.IntField(default=61)
-    weapon_catridge = fields.IntField(default=6)
-    time_reload_weapon = fields.BigIntField(default=0)
-    now_health = fields.IntField(default=57)
-    max_health = fields.IntField(default=100)
-    now_satiety = fields.IntField(default=72)
-    max_satiety = fields.IntField(default=100)
-    now_dehydration = fields.IntField(default=30)
-    max_dehydration = fields.IntField(default=100)
-    now_cheerfulness = fields.IntField(default=56)
-    max_cheerfulness = fields.IntField(default=100)
-    now_radioactivity = fields.IntField(default=76)
-    max_radioactivity = fields.IntField(default=100)
-    now_exp = fields.IntField(default=0)
-    now_lvl = fields.IntField(default=1)
-    now_common_balance = fields.IntField(default=500)
-    now_donate_balance = fields.IntField(default=0)
-    work = fields.IntField(default=0)
-    count_common_bilets = fields.IntField(default=3)
-    count_gold_bilets = fields.IntField(default=1)
-    max_energy_player = fields.IntField(default=10)
-    now_energy_player = fields.IntField(default=3)
-    indicator_mailing = fields.IntField(default=1)
-    view_react_bot = fields.IntField(default=1) #Type view reaction bot - image/text - 1/0
-    status_player = fields.IntField(default=0)
-    status_learning = fields.IntField(default=0)
-    conn_type_sess = fields.IntField(default=0)
-    ban_report = fields.IntField(default=0)
-    ban_mult = fields.IntField(default=0)
-    comment_donate = fields.IntField(default=0)
+    last_step = fields.IntField(default=0) #Need to change legs when walking
+
+    user_health = fields.JSONField() #Type list; Index: 0 - now health; 1 - max health
+    user_satiety = fields.JSONField()
+    user_dehydration = fields.JSONField()
+    user_cheerfulness = fields.JSONField()
+    user_radioactivity = fields.JSONField()
+    user_energy = fields.JSONField()
+    user_tickets = fields.JSONField() #Type list; Index: 0 - common; 1 - gold
 
     class Meta:
-        database = "player_database"
+        database = "multiplayer"
 
-class PlayerRocket(Model):
+class Rocket(Model):
     id = fields.IntField(pk=True)
-    pers_id = fields.IntField()
-    type_rocket = fields.IntField(default=0)
-    name_rocket = fields.CharField(max_length=30)
-    now_fuel = fields.BigIntField(default=3000)
-    now_build = fields.IntField(default=2)
-    max_build = fields.IntField(default=2)
-    place_builds = fields.JSONField() #1 - num place object; 2 - type object
+
+    user_id = fields.IntField()
+    rocket_id = fields.IntField(default=0)
+    rocket_name = fields.CharField(max_length=30)
+    rocket_fuel = fields.BigIntField(default=3000)
+    places_free = fields.JSONField() #Explanations above
 
     class Meta:
-        database = "player_rocket"
+        database = "rocket"
 
-class BuildingBase(Model):
+class Building(Model):
     id = fields.IntField(pk=True)
-    person_id = fields.IntField()
-    id_building = fields.IntField()
-    id_place_building = fields.IntField()
-    id_type_building = fields.IntField() #Type building - building/trigger
-    cordinat_x1 = fields.IntField()
-    cordinat_y1 = fields.IntField()
-    cordinat_x2 = fields.IntField()
-    cordinat_y2 = fields.IntField()
+
+    user_id = fields.IntField()
+    build_id = fields.IntField()
+    building_place = fields.IntField()
+    building_type = fields.IntField() #Building/trigger
+    building_cordinats = fields.JSONField() #Type list; Index: 0 - x1; 1 - y1; 2 - x2; 3 - y2
 
     class Meta:
-        database = "building_base"
+        database = "building"
 
-class PlayerInventory(Model):
+class Inventory(Model):
     id = fields.IntField(pk=True)
-    pers_id = fields.IntField()
-    pers_nick = fields.CharField(max_length=30)
-    backpack_type = fields.IntField(default=0)
-    backpack_cells = fields.JSONField()#1 - type object; 2 - count_object
-    weapon_type = fields.IntField(default=1)
-    armor_head = fields.IntField(default=1)
-    armor_vest = fields.IntField(default=1)
-    armor_gloves = fields.IntField(default=1)
-    armor_pant = fields.IntField(default=1)
-    armor_footwears = fields.IntField(default=1)
+
+    user_id = fields.IntField()
+    
+    gun_type = fields.IntField(default=1)
+    gun_clogging = fields.IntField(default=61)
+    gun_magazine = fields.IntField(default=6)
+    timeout_reload = fields.BigIntField(default=0) #Timeout of reload gun
+    feature_armors = fields.JSONField() #Explanations above
+
+    backpack_type = fields.IntField(default=1)
+    backpack_cells = fields.JSONField() #Type list of lists; Index lists 0 - type object; 1 - count_object
 
     class Meta:
-        database = "player_inventory"
+        database = "inventory"
 
-class SendMessChat(Model):
+class MessChat(Model):
     id = fields.IntField(pk=True)
-    pers_id = fields.IntField()
-    pers_nick = fields.CharField(max_length=30)
-    message_id = fields.IntField()
-    message_text = fields.IntField()
-    message_date = fields.IntField()
-    message_post_time = fields.IntField()
-    message_type = fields.IntField(default=0) #GLOBAL/LOCAL/PRIVATE
-    whom_to_send = fields.IntField() #If message_type = 2 Then whom_to_send = recipient_id
+
+    user_id = fields.IntField()
+    feature_message = fields.JSONField() #Explanations above
 
     class Meta:
-        database = "chat_multiplayer"
+        database = "mess_chat"
 
-class PlayerSettings(Model):
+class Settings(Model):
     id = fields.IntField(pk=True)
-    pers_id = fields.IntField()
-    pers_nick = fields.CharField(max_length=30)
-    view_type_mess = fields.IntField(default=0)
-    view_quests = fields.IntField(default=1)
-    type_show_chat = fields.IntField(default=0)
-    shrifts_all = fields.IntField(default=0)
+
+    user_id = fields.IntField()
+
+    mailing_permission = fields.IntField(default=1) #On - 1; Off - 0
+    study_permission = fields.IntField(default=1)
+    answer_options = fields.IntField(default=1) #Type view reaction bot - image/text - 1/0
+
+    show_chat = fields.IntField(default=0)
+    permission_tips = fields.IntField(default=1)
+    chat_type = fields.IntField(default=0)
+    installed_font = fields.IntField(default=0)
 
     class Meta:
-        database = "player_settings"
+        database = "settings"
 
-class SessionDate(Model):
+class Session(Model):
     id = fields.IntField(pk=True)
-    sess_name = fields.CharField(max_length=30)
-    battle_category = fields.IntField(default=0)#0 - PVE or 1 - PVP
-    list_player_id = fields.JSONField()
-    max_seats_session = fields.IntField(default=100)
-    now_seats_session = fields.IntField(default=0)
+
+    name = fields.CharField(max_length=30)
+    category = fields.IntField(default=0)#0 - PVE or 1 - PVP
+    players_id = fields.JSONField() #Type list
+    max_seats = fields.IntField(default=100)
 
     class Meta:
-        database = "player_settings"
+        database = "session"
 
-class PlayerBranch(Model):
+class MultiplayerBranch(Model):
     id = fields.IntField(pk=True)
     pers_id = fields.IntField()
     branch = fields.CharField(20)

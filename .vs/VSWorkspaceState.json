@@ -1,9 +1,7 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\materials_bot",
-    "\\multiplayer"
+    ""
   ],
-  "SelectedNode": "\\multiplayer\\TestEngineImage.py",
+  "SelectedNode": "\\MainFile.py",
   "PreviewInSolutionExplorer": false
 }
