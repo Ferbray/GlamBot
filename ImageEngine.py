@@ -3,23 +3,23 @@ from PIL import Image, ImageOps, ImageDraw, ImageFont, ImageEnhance
 def ElipsAva(id, linc):
 	photo_ava_400 = Image.open(f'PhotoDatePlayers/{id}/{linc} orig_400.png')
 
-	list_elips_sizes = [
+	elips_sizes = [
 		(264, 264), 
 		(144, 144), 
 		(112,112)
 	]
 
-	for elips_size in list_elips_sizes:
-		elips_mask = Image.new('L', elips_size, 0)
+	for size in elips_sizes:
+		elips_mask = Image.new('L', size, 0)
 		elips_draw = ImageDraw.Draw(elips_mask)
-		elips_draw.ellipse((0, 0) + elips_size, fill=255)
+		elips_draw.ellipse((0, 0) + size, fill=255)
 
-		photo_x_size = photo_ava_400.resize(elips_size)
+		photo_x_size = photo_ava_400.resize(size)
 
 		elips_output = ImageOps.fit(photo_x_size, elips_mask.size, centering=(0.5, 0.5))
 		elips_output.putalpha(elips_mask)
-		elips_output.thumbnail(elips_size, Image.ANTIALIAS)
-		elips_output.save(f'PhotoDatePlayers/{id}/{id} elips_{elips_size[0]}.png')
+		elips_output.thumbnail(size, Image.ANTIALIAS)
+		elips_output.save(f'PhotoDatePlayers/{id}/{id} elips_{size[0]}.png')
 
 
 def WritePersProfile(pers_date):
@@ -48,44 +48,46 @@ def WritePersProfile(pers_date):
 	draw = ImageDraw.Draw(pattern_pers_date)
 
 	for pencil in cordinat_list:
-		draw.text(pencil[0], pers_date[cordinat_list.index(pencil)], text_color, pencil[1])
+		draw.text(pencil[0], str(pers_date[cordinat_list.index(pencil)]), text_color, pencil[1])
 
 	pattern_pers_date.save(f'PhotoDatePlayers/{pers_date[1]}/{pers_date[1]} profile.png')
 
-def WriteTopPlayer(list_player, person_top, person_id):
+def WriteTopPlayer(players_data, person_top, person_id):
 	pattern_top_player = Image.open('materials_bot/TopPlayer.png')
 	standart_font = ImageFont.truetype(font="shrifts/Ubuntu-Medium.ttf", size=60, index=0, encoding='', layout_engine=None)
-	small_font = ImageFont.truetype(font="shrifts/Ubuntu-Medium.ttf", size=35, index=0, encoding='', layout_engine=None)
+	small_font = ImageFont.truetype(font="shrifts/Ubuntu-Medium.ttf", size=30, index=0, encoding='', layout_engine=None)
 
 	text_color = (32, 0, 38)
 	cordinat_writing = [
-		[(144, 144), (78, 169), (193, 174), (320, 120), (200, 220), (185, 120)],
-		[(144, 144), (920, 175), (545, 170), (670, 120), (560, 220), (550, 120)],
-		[(112, 112), (340, 315), (425, 320), (550, 270), (435, 365), (435, 265)],
-		[(112, 112), (60, 475), (150, 475), (280, 435), (165, 510), (160, 435)],
-		[(112, 112), (935, 480), (560, 470), (700, 430), (585, 515), (575, 430)],
-		[(112, 112), (63, 615), (150, 615), (280, 430), (160, 515), (160, 570)],
-		[(112, 112), (935, 615), (565, 610), (700, 570), (590, 650), (575, 570)],
-		[(112, 112), (60, 760), (150, 755), (289, 715), (165, 795), (155, 710)],
-		[(112,112), (930, 760), (570, 760), (705, 710), (590, 790), (580, 710)],
-		[(144, 144), (160, 915), (270, 920), (545, 865), (390, 965), (286, 865)]
+		[(144, 144), (7, 99), (180, 140), (310, 105), (200, 205), (200, 105)],
+		[(144, 144), (848, 99), (540, 140), (668, 105), (560, 205), (560, 105)],
+		[(112, 112), (284, 260), (424, 284), (548, 250), (437, 348), (440, 252)],
+		[(112, 112), (25, 425), (150, 455), (280, 420), (160, 505), (160, 420)],
+		[(112, 112), (900, 425), (555, 455), (700, 420), (580, 505), (580, 420)],
+		[(112, 112), (25, 570), (150, 590), (280, 555), (160, 640), (160, 560)],
+		[(112, 112), (900, 565), (555, 590), (700, 560), (580, 640), (580, 560)],
+		[(112, 112), (25, 710), (150, 730), (280, 700), (160, 785), (160, 700)],
+		[(112,112), (900, 705), (555, 730), (700, 700), (585, 785), (585, 700)],
+		[(144, 144), (115, 855), (255, 885), (540, 860), (380, 955), (280, 855)]
 	]
 
 	draw = ImageDraw.Draw(pattern_top_player)
 
-	for player_date in list_player:
-		num_player = list_player.index(player_date)
+	for data in players_data:
+		num_player = players_data.index(data)
 		elips_mask = Image.new('L', cordinat_writing[num_player][0], 0)
-		elips_x_size = Image.open(f'PhotoDatePlayers/{player_date[1]}/{player_date[1]} elips_{cordinat_writing[num_player][0]}.png')
-		pattern_pers_date.paste(elips_x_size.convert('RGB'), 
+		elips_x_size = Image.open(f'PhotoDatePlayers/{data[1]}/{data[1]} elips_{cordinat_writing[num_player][0][0]}.png')
+		pattern_top_player.paste(elips_x_size.convert('RGB'), 
 						  cordinat_writing[num_player][1], 
 						  elips_x_size)
 
 		for pen in cordinat_writing[num_player][2:]:
-			num_cordinat = cordinat_writing[num_player].index(pen)-2
-			type_shrift = (small_font if num_cordinat>0 else standart_font)
-			what_writed = (person_top if num_player==9 else 
-				  (player_date[num_cordinat] if num_cordinat<5 else str(num_player+1)))
-			draw.text(pen, what_writed, text_color, type_shrift)
+			num_cordinat = cordinat_writing[num_player]
+			num_cordinat = num_cordinat.index(pen)-2
 
-	pattern_pers_date.save(f'PhotoDatePlayers/{person_id}/{person_id} top_player.png')
+			type_shrift = (small_font if num_cordinat>0 else standart_font)
+
+			what_writed = (person_top if num_player==9 else 
+				  (num_player+1 if num_cordinat==3 else data[num_cordinat]))
+			draw.text(pen, str(what_writed), text_color, type_shrift)
+	pattern_top_player.save(f'PhotoDatePlayers/{person_id}/{person_id} top_player.png')

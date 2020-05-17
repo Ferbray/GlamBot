@@ -91,11 +91,11 @@ class Main(Model):
     user_status = fields.IntField(default=0)
     user_progress = fields.JSONField() #Type list; Index: 0 - exp; 1 - lvl
     user_balance = fields.JSONField() #Type list; Index: 0 - common; 1 - donate
-    user_location = fields.IntField(default=0) #0 - Loc Menu; 1,2, ... - Loc Multiplayer; -1 - Multiplayer forbidden
+    user_location = fields.IntField(default=1) #1,2, ... - Loc Multiplayer; 0 - Multiplayer forbidden
 
     timeout_ban1 = fields.BigIntField(default=0) #Timeout of multiplayer ban
     timeout_ban2 = fields.BigIntField(default=0) #Timeout of report ban
-    donate_id = fields.IntField(default=0) #Indicated in the description
+    payment_state = fields.JSONField() #Type list; Index: 0 - ammount; 1 - id
     
     class Meta:
         database = "main"
@@ -103,11 +103,13 @@ class Main(Model):
 class Multiplayer(Model):
     id = fields.IntField(pk=True)
 
-    session_num = fields.IntField()
+    user_id = fields.IntField()
+    session_num = fields.IntField(default=0)
     cordinat_x = fields.IntField(default=2112)
     cordinat_y = fields.IntField(default=2048)
     last_step = fields.IntField(default=0) #Need to change legs when walking
 
+    user_protection = fields.IntField(default=17)
     user_health = fields.JSONField() #Type list; Index: 0 - now health; 1 - max health
     user_satiety = fields.JSONField()
     user_dehydration = fields.JSONField()
@@ -192,13 +194,13 @@ class Session(Model):
     name = fields.CharField(max_length=30)
     category = fields.IntField(default=0)#0 - PVE or 1 - PVP
     players_id = fields.JSONField() #Type list
-    max_seats = fields.IntField(default=100)
 
     class Meta:
         database = "session"
 
 class MultiplayerBranch(Model):
     id = fields.IntField(pk=True)
+
     pers_id = fields.IntField()
     branch = fields.CharField(20)
     context = fields.CharField(255)
