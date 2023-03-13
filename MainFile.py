@@ -28,7 +28,7 @@ from qiwi_wrapper import qiwi_payment, qiwi_history
 from tortoise_models import Main, Multiplayer, Rocket, Building, Inventory, MessChat, Settings, Session, MultiplayerBranch
 from ImageEngine import ElipsAva, WritePersProfile, WriteTopPlayer
 
-bot = Bot('9c6713c47ccc55cbbb5ba7b712c1a8a5e7c3c419da361d12f60dfd27ad3c882ed28c344b898193733989b', mobile=False)
+bot = Bot('TOKEN', mobile=False)
 
 async def get_info(upload_url: str, files: dict):
 	async with ClientSession(json_serialize=json.dumps) as client:
