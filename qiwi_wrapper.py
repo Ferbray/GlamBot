@@ -1,8 +1,8 @@
 import json
 from aiohttp import ClientSession
 
-api_access_token = '9e6ddfa3f901d1a7a52ecbd42bcfd9c1' #https://qiwi.com/api
-my_login = '+79619352257' # номер QIWI Кошелька
+api_access_token = 'TOKEN' #https://qiwi.com/api
+my_login = 'Number phone' # номер QIWI Кошелька
 
 async def qiwi_payment(pid, amount, blocked=["sum","account","comment"]):
 	parameters = {"amount": str(amount), "currency": 643}
